@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alarm Clock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .clock {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        .alarm-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .alarm-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .delete-btn {
+            background-color: #ff0000;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="clock text-center" id="clock"></div>
+        <div class="row mb-3">
+            <div class="col-sm-3">
+                <label for="hours">Hours:</label>
+                <input type="number" id="hours" class="form-control" min="1" max="12">
+            </div>
+            <div class="col-sm-3">
+                <label for="minutes">Minutes:</label>
+                <input type="number" id="minutes" class="form-control" min="0" max="59">
+            </div>
+            <div class="col-sm-3">
+                <label for="seconds">Seconds:</label>
+                <input type="number" id="seconds" class="form-control" min="0" max="59">
+            </div>
+            <div class="col-sm-3">
+                <label for="ampm">AM/PM:</label>
+                <select id="ampm" class="form-control">
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn btn-primary mb-3" onclick="setAlarm()">Set Alarm</button>
+        <ul class="alarm-list" id="alarmList"></ul>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours() % 12 || 12;
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        function setAlarm() {
+            const hoursInput = document.getElementById('hours');
+            const minutesInput = document.getElementById('minutes');
+            const secondsInput = document.getElementById('seconds');
+            const ampmInput = document.getElementById('ampm');
+
+            const hours = parseInt(hoursInput.value);
+            const minutes = parseInt(minutesInput.value);
+            const seconds = parseInt(secondsInput.value);
+            const ampm = ampmInput.value;
+
+            const alarmTime = new Date();
+            alarmTime.setHours(ampm === 'PM' ? hours + 12 : hours);
+            alarmTime.setMinutes(minutes);
+            alarmTime.setSeconds(seconds);
+
+            const alarmItem = document.createElement('li');
+            alarmItem.classList.add('alarm-item');
+            alarmItem.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.classList.add('delete-btn');
+            deleteButton.onclick = function () {
+                deleteAlarm(alarmItem);
+            };
+            alarmItem.appendChild(deleteButton);
+
+            document.getElementById('alarmList').appendChild(alarmItem);
+
+            // Start checking for alarms
+            if (!interval) {
+                interval = setInterval(checkAlarms, 1000);
+            }
+
+            // Clear input fields
+            hoursInput.value = '';
+            minutesInput.value = '';
+            secondsInput.value = '';
+            ampmInput.value = 'AM';
+        }
+
+        function deleteAlarm(alarmItem) {
+            alarmItem.remove();
+        }
+
+        function checkAlarms() {
+            const now = new Date();
+            const alarms = document.querySelectorAll('.alarm-item');
+            alarms.forEach(alarmItem => {
+                const alarmTimeParts = alarmItem.textContent.split(' ')[0].split(':');
+                const alarmHour = parseInt(alarmTimeParts[0]);
+                const alarmMinutes = parseInt(alarmTimeParts[1]);
+                const alarmSeconds = parseInt(alarmTimeParts[2]);
+                const alarmAMPM = alarmTimeParts[3];
+
+                if (
+                    now.getHours() === alarmHour &&
+                    now.getMinutes() === alarmMinutes &&
+                    now.getSeconds() === alarmSeconds &&
+                    (now.getHours() >= 12 ? 'PM' : 'AM') === alarmAMPM
+                ) {
+                    alert('ALARM!');
+                    deleteAlarm(alarmItem);
+                }
+            });
+        }
+
+        let interval;
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
